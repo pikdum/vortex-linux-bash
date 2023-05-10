@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+USER=vortex
 BASE_DIR="$HOME/.pikdum/vortex"
 WINE_BUILDS="$BASE_DIR/wine-builds"
 VORTEX_INSTALLERS="$BASE_DIR/vortex-installers"
@@ -55,6 +56,14 @@ setup_wineprefix() {
 
     WINEDLLOVERRIDES="mscoree,mshtml=" WINEPREFIX="$VORTEX_PREFIX" "$WINE_BUILD/bin/wineboot" --init
     WINEPREFIX="$VORTEX_PREFIX" "$WINE_BUILD/bin/wineserver" --wait
+
+    # remove symlinks, because why are they even there
+    for item in "$VORTEX_PREFIX/drive_c/users/vortex"/*; do
+    if [ -h "$item" ]; then
+        rm "$item"
+        mkdir "$item"
+    fi
+    done
 }
 
 # mount some steam game folders as windows drives
