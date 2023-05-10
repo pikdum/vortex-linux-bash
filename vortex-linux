@@ -158,10 +158,21 @@ start_vortex() {
     echo "Starting Vortex..." >&2
 
     WINE_BUILD="$WINE_BUILDS/$(select_from_folder "$WINE_BUILDS" "Choose a Wine build: ")"
-    trap '$WINE_BUILD/bin/wineserver --kill' EXIT
 
-    WINEPREFIX="$VORTEX_PREFIX" "$WINE_BUILD/bin/wine" "$VORTEX_PREFIX/drive_c/Program Files/Black Tree Gaming Ltd/Vortex/Vortex.exe"
-    WINEPREFIX="$VORTEX_PREFIX" "$WINE_BUILD/bin/wineserver" --wait
+    if [ "$1" = "-i" ]; then
+        if [ -n "$2" ]; then
+            # url supplied, so pass arguments to vortex
+            WINEPREFIX="$VORTEX_PREFIX" "$WINE_BUILD/bin/wine" "$VORTEX_PREFIX/drive_c/Program Files/Black Tree Gaming Ltd/Vortex/Vortex.exe" "$@"
+        else
+            # no url supplied, so do not pass arguments
+            # this so so we can always have a trailing -i in the .desktop file
+            WINEPREFIX="$VORTEX_PREFIX" "$WINE_BUILD/bin/wine" "$VORTEX_PREFIX/drive_c/Program Files/Black Tree Gaming Ltd/Vortex/Vortex.exe"
+        fi
+    else
+        # not install, so pass args
+        WINEPREFIX="$VORTEX_PREFIX" "$WINE_BUILD/bin/wine" "$VORTEX_PREFIX/drive_c/Program Files/Black Tree Gaming Ltd/Vortex/Vortex.exe" "$@"
+    fi
+
 }
 
 # begin of more important commands
@@ -184,7 +195,7 @@ uninstall() {
 
 # start vortex
 start() {
-    start_vortex
+    start_vortex "$@"
 }
 
 # pull new wine and vortex versions
