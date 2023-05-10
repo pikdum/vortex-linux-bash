@@ -182,6 +182,7 @@ install_vortex() {
 start_vortex() {
     echo "Starting Vortex..." >&2
 
+    # TODO: rather than asking every time (if multiple), should be able to set a 'default'
     WINE_BUILD="$WINE_BUILDS/$(select_from_folder "$WINE_BUILDS" "Choose a Wine build: ")"
 
     if [ "$1" = "-d" ] || [ "$1" = "-i" ]; then
