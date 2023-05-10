@@ -197,16 +197,12 @@ update() {
     download_mapping
 }
 
-# symlink AppData/Local/* from game to Vortex
-# this is mainly to help get skyrim loadorder.txt and plugins.txt in the right place
-# maybe some other games too
-# TODO: could I make a more general solution that traverses users/steamuser/?
 symlink() {
-    echo "Symlinking target game's AppData/Local/* to Vortex..."
+    echo "Symlinking target game's home subfolders to Vortex..."
     local game_id="$(select_game_id)"
     local compatdata_dir="$HOME/.steam/steam/steamapps/compatdata"
-    local src_dir="$compatdata_dir/$game_id/pfx/drive_c/users/steamuser/AppData/Local"
-    local dest_dir="$VORTEX_PREFIX/drive_c/users/vortex/AppData/Local"
+    local src_dir="$compatdata_dir/$game_id/pfx/drive_c/users/steamuser"
+    local dest_dir="$VORTEX_PREFIX/drive_c/users/vortex"
 
     # Check if the source directory exists
     if [ ! -d "$src_dir" ]; then
@@ -220,12 +216,18 @@ symlink() {
         exit 1
     fi
 
-    for dir in "$src_dir"/*; do
-        dir_name=$(basename "$dir")
-        rm -rf "${dest_dir:?}/$dir_name"
-        ln -s "$dir" "$dest_dir/$dir_name"
-        echo "Symlink created: $dest_dir/$dir_name"
-    done
+    files=$(find "$src_dir" -mindepth 1 -type d | sort -ur)
+
+    # Loop through the files and attempt to create symlinks from source to destination
+    while IFS= read -r file; do
+        # Remove the source directory prefix from the file path
+        relative_path="${file#$src_dir/}"
+
+        # Create a symlink from source to destination, preserving the file path structure
+        if ln -sT "$file" "$dest_dir/$relative_path" >/dev/null 2>&1; then
+            echo "Symlink created: $dest_dir/$relative_path"
+        fi
+    done <<< "$files"
 }
 
 # show help
