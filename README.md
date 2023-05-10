@@ -42,5 +42,12 @@ Available commands:
 - `start`: Launch Vortex.
 - `uninstall`: Remove Vortex.
 - `update`: Fetch the latest Wine, Vortex, and game mappings.
+- `symlink`: Symlink target game's home subfolders to Vortex.
 
 **Note:** Ensure that the `vortex-linux` file has execute permissions (e.g., `chmod +x vortex-linux`) before running any commands.
+
+For detailed information about each command, use the `help` command:
+
+```shell
+vortex-linux help
+```

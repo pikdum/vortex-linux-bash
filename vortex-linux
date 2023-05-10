@@ -208,6 +208,11 @@ update() {
     download_mapping
 }
 
+# this will go through the target game's home directory, recursively,
+# and symlink folders to vortex's home directory
+# this is mostly to support bethesda games,
+# since they keep loadorder.txt and plugins.txt in appdata
+# but might be flexible enough for others that do similar
 symlink() {
     echo "Symlinking target game's home subfolders to Vortex..."
     local game_id="$(select_game_id)"
@@ -249,6 +254,7 @@ help() {
     echo "  start               Start Vortex"
     echo "  uninstall           Uninstall Vortex"
     echo "  update              Download the latest Wine, Vortex, and game mappings"
+    echo "  symlink             Symlink target game's home subfolders to Vortex"
     echo ""
     echo "Description:"
     echo "  This script allows you to install and run Vortex, a mod manager for games."
@@ -271,6 +277,12 @@ help() {
     echo "  update: Update to the latest Wine, Vortex, and game mappings"
     echo "    This command downloads the latest versions of Wine-GE-Custom,"
     echo "    Vortex setup executable, and the game mappings file."
+    echo ""
+    echo "  symlink: Symlink target game's home subfolders to Vortex"
+    echo "    This command allows you to symlink the target game's home subfolders"
+    echo "    to Vortex. This is useful for games that store configuration files"
+    echo "    in their home directory. It helps Vortex manage mods for those games"
+    echo "    seamlessly by linking the required folders."
 }
 
 if declare -f "$1" >/dev/null; then
