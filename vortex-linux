@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+SCRIPT_PATH=$(readlink -f "$0")
 USER=vortex
 BASE_DIR="$HOME/.pikdum/vortex"
 WINE_BUILDS="$BASE_DIR/wine-builds"
@@ -140,6 +141,29 @@ select_game_id() {
     done
 }
 
+# add a .desktop entry to ~/.local/share/applications/
+# can use this for opening nxm:// links
+install_desktop_entry() {
+    echo "Downloading icon..." >&2
+    rm -f "$BASE_DIR/vortex.ico"
+    curl -# -JL -o "$BASE_DIR/vortex.ico" "https://raw.githubusercontent.com/pikdum/vortex-linux/master/assets/vortex.ico"
+
+    echo "Creating .desktop entry..."
+cat <<EOF > "$HOME/.local/share/applications/vortex-linux.desktop"
+[Desktop Entry]
+Type=Application
+Categories=Game;Utility
+Name=Vortex
+MimeType=x-scheme-handler/nxm;x-scheme-handler/nxm-protocol
+Terminal=false
+X-KeepTerminal=false
+Path=$HOME/.pikdum/vortex/vortex-prefix/drive_c/Program Files/Black Tree Gaming Ltd/Vortex
+Exec=$SCRIPT_PATH start -d %u
+Icon=$HOME/.pikdum/vortex/vortex.ico
+EOF
+    gtk-update-icon-cache || true
+}
+
 # run vortex setup exe
 install_vortex() {
     echo "Installing Vortex..." >&2
@@ -149,6 +173,7 @@ install_vortex() {
 
     local vortex_exe="$VORTEX_INSTALLERS/$(select_from_folder "$VORTEX_INSTALLERS" "Choose a Vortex version: ")"
 
+    install_desktop_entry
     WINEPREFIX="$VORTEX_PREFIX" "$WINE_BUILD/bin/wine" "$vortex_exe"
     WINEPREFIX="$VORTEX_PREFIX" "$WINE_BUILD/bin/wineserver" --wait
 }
@@ -159,13 +184,13 @@ start_vortex() {
 
     WINE_BUILD="$WINE_BUILDS/$(select_from_folder "$WINE_BUILDS" "Choose a Wine build: ")"
 
-    if [ "$1" = "-i" ]; then
+    if [ "$1" = "-d" ] || [ "$1" = "-i" ]; then
         if [ -n "$2" ]; then
             # url supplied, so pass arguments to vortex
             WINEPREFIX="$VORTEX_PREFIX" "$WINE_BUILD/bin/wine" "$VORTEX_PREFIX/drive_c/Program Files/Black Tree Gaming Ltd/Vortex/Vortex.exe" "$@"
         else
             # no url supplied, so do not pass arguments
-            # this so so we can always have a trailing -i in the .desktop file
+            # this so so we can always have a trailing -i or -d in the .desktop file, without errors
             WINEPREFIX="$VORTEX_PREFIX" "$WINE_BUILD/bin/wine" "$VORTEX_PREFIX/drive_c/Program Files/Black Tree Gaming Ltd/Vortex/Vortex.exe"
         fi
     else
@@ -191,6 +216,8 @@ install() {
 # uninstall this tool
 uninstall() {
     rm -rf "$BASE_DIR"
+    rm -rf "$HOME/.local/share/applications/vortex-linux.desktop"
+    echo "Vortex uninstalled." &>2
 }
 
 # start vortex
