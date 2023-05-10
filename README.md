@@ -17,7 +17,7 @@ vortex-linux is a CLI tool that simplifies running Vortex, the popular mod manag
 1. Download the `vortex-linux` file.
 
 ```shell
-curl -LO https://example.com/vortex-linux
+curl -LO https://raw.githubusercontent.com/pikdum/vortex-linux/master/vortex-linux
 ```
 
 2. Make the file executable.
