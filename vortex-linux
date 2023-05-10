@@ -1,0 +1,178 @@
+#!/usr/bin/env bash
+
+BASE_DIR="$HOME/.pikdum/vortex"
+WINE_BUILDS="$BASE_DIR/wine-builds"
+VORTEX_INSTALLERS="$BASE_DIR/vortex-installers"
+VORTEX_PREFIX="$BASE_DIR/vortex-prefix"
+
+# create required folders
+setup() {
+    mkdir -p "$WINE_BUILDS" "$VORTEX_INSTALLERS" "$WINEPREFIX"
+}
+
+# get asset url from latest github release
+# params: $1 - github repo, $2 - file extension
+get_latest_release() {
+    local repo="$1"
+    local ext="$2"
+    echo "Looking up latest $repo $ext asset..." >&2
+    curl -# -L "https://api.github.com/repos/$repo/releases/latest" | grep -o "https://.*${ext}"
+}
+
+# download latest wine-ge-custom
+download_wine() {
+    cd "$WINE_BUILDS"
+    url="$(get_latest_release "GloriousEggroll/wine-ge-custom" ".tar.xz")"
+    filename="$(basename -- "$url")"
+    echo "Downloading $filename..." >&2
+    curl -# -L "$url" | tar -xJ
+}
+
+# download latest vortex setup exe
+download_vortex() {
+    cd "$VORTEX_INSTALLERS"
+    local url="$(get_latest_release "Nexus-Mods/Vortex" ".exe")"
+    local filename="$(basename -- "$url")"
+    echo "Downloading $filename..." >&2
+    rm -f "$filename"
+    curl -# -OJL "$url"
+}
+
+# create vortex's wineprefix
+setup_wineprefix() {
+    echo "Setting up WINEPREFIX: $VORTEX_PREFIX..." >&2
+
+    WINE_BUILD="$WINE_BUILDS/$(select_from_folder "$WINE_BUILDS" "Choose a Wine build: ")"
+    trap '$WINE_BUILD/bin/wineserver --kill' EXIT
+
+    WINEDLLOVERRIDES="mscoree,mshtml=" WINEPREFIX="$VORTEX_PREFIX" "$WINE_BUILD/bin/wineboot" --init
+    WINEPREFIX="$VORTEX_PREFIX" "$WINE_BUILD/bin/wineserver" --wait
+}
+
+# mount some steam game folders as windows drives
+setup_drives() {
+    echo "Setting up drives..."
+    cd "$VORTEX_PREFIX/dosdevices"
+    ln -s $HOME/.steam/steam/steamapps/common/ d: || true
+}
+
+# select item from folder
+# params: $1 - folder, $2 - prompt
+select_from_folder() {
+    local directory="$1"
+    local prompt="$2"
+    local options=()
+
+    for option in "$directory"/*; do
+        options+=("$(basename "$option")")
+    done
+
+    if [[ ${#options[@]} -eq 1 ]]; then
+        echo "${options[0]}"
+        return
+    fi
+
+    PS3="$prompt"
+    select dir in "${options[@]}"; do
+        if [[ -n $dir ]]; then
+            echo "$dir"
+            return
+        else
+            echo "Invalid selection, try again." >&2
+        fi
+    done
+}
+
+# run vortex setup exe
+install_vortex() {
+    echo "Installing Vortex..." >&2
+
+    WINE_BUILD="$WINE_BUILDS/$(select_from_folder "$WINE_BUILDS" "Choose a Wine build: ")"
+    trap '$WINE_BUILD/bin/wineserver --kill' EXIT
+
+    local vortex_exe="$VORTEX_INSTALLERS/$(select_from_folder "$VORTEX_INSTALLERS" "Choose a Vortex version: ")"
+
+    WINEPREFIX="$VORTEX_PREFIX" "$WINE_BUILD/bin/wine" "$vortex_exe"
+    WINEPREFIX="$VORTEX_PREFIX" "$WINE_BUILD/bin/wineserver" --wait
+}
+
+# start vortex
+start_vortex() {
+    echo "Starting Vortex..." >&2
+
+    WINE_BUILD="$WINE_BUILDS/$(select_from_folder "$WINE_BUILDS" "Choose a Wine build: ")"
+    trap '$WINE_BUILD/bin/wineserver --kill' EXIT
+
+    WINEPREFIX="$VORTEX_PREFIX" "$WINE_BUILD/bin/wine" "$VORTEX_PREFIX/drive_c/Program Files/Black Tree Gaming Ltd/Vortex/Vortex.exe"
+    WINEPREFIX="$VORTEX_PREFIX" "$WINE_BUILD/bin/wineserver" --wait
+}
+
+# begin of more important commands
+
+# set up dependencies + install vortex
+install() {
+    setup
+    download_wine
+    download_vortex
+    setup_wineprefix
+    setup_drives
+    install_vortex
+}
+
+# uninstall this tool
+uninstall() {
+    rm -rf "$BASE_DIR"
+}
+
+# start vortex
+start() {
+    start_vortex
+}
+
+# pull new wine and vortex versions
+update() {
+    echo "Grabbing new releases..."
+    setup
+    download_wine
+    download_vortex
+}
+
+# show help
+help() {
+    echo "Usage: ./vortex-linux [command]"
+    echo "Commands:"
+    echo "  install             Set up dependencies and install Vortex"
+    echo "  start               Start Vortex"
+    echo "  uninstall           Uninstall Vortex"
+    echo "  update              Download the latest Wine and Vortex versions"
+    echo ""
+    echo "Description:"
+    echo "  This script allows you to install and run Vortex, a mod manager for games."
+    echo "  The script handles the installation and setup of Wine, as well as the"
+    echo "  installation of Vortex using Wine."
+    echo ""
+    echo "Command Details:"
+    echo "  install: Set up dependencies and install Vortex"
+    echo "    This command sets up the required folders, downloads the latest"
+    echo "    version of Wine-GE-Custom, downloads the latest Vortex setup"
+    echo "    executable, creates the Vortex Wineprefix, and mounts the"
+    echo "    necessary game folders as Windows drives."
+    echo ""
+    echo "  start: Start Vortex"
+    echo "    This command starts Vortex using the specified Wine build."
+    echo ""
+    echo "  uninstall: Uninstall Vortex"
+    echo "    This command removes all Vortex-related files and directories."
+    echo ""
+    echo "  update: Update to the latest Wine and Vortex versions"
+    echo "    This command downloads the latest versions of Wine-GE-Custom and"
+    echo "    Vortex setup executable."
+}
+
+if declare -f "$1" >/dev/null; then
+    "$@"
+    exit 0
+else
+    help
+    exit 1
+fi
