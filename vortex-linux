@@ -8,7 +8,7 @@ VORTEX_PREFIX="$BASE_DIR/vortex-prefix"
 
 # create required folders
 setup() {
-    mkdir -p "$WINE_BUILDS" "$VORTEX_INSTALLERS" "$WINEPREFIX"
+    mkdir -p "$WINE_BUILDS" "$VORTEX_INSTALLERS" "$VORTEX_PREFIX"
 }
 
 # get asset url from latest github release
