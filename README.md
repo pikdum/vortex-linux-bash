@@ -41,8 +41,6 @@ Available commands:
 - `install`: Set up dependencies and install Vortex.
 - `start`: Launch Vortex.
 - `uninstall`: Remove Vortex.
-- `update`: Fetch the latest Wine and Vortex versions.
+- `update`: Fetch the latest Wine, Vortex, and game mappings.
 
 **Note:** Ensure that the `vortex-linux` file has execute permissions (e.g., `chmod +x vortex-linux`) before running any commands.
-
-Please note that vortex-linux is still a work in progress, and further improvements are being made.

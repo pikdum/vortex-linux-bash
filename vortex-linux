@@ -38,6 +38,14 @@ download_vortex() {
     curl -# -OJL "$url"
 }
 
+# download the latest vortexgames.txt mapping
+# used to find which games map to which proton prefixes
+download_mapping() {
+    cd "$BASE_DIR"
+    echo "Downloading vortexgames.txt mapping..." >&2
+    curl -# -OJL "https://raw.githubusercontent.com/sonic2kk/steamtinkerlaunch/master/misc/vortexgames.txt"
+}
+
 # create vortex's wineprefix
 setup_wineprefix() {
     echo "Setting up WINEPREFIX: $VORTEX_PREFIX..." >&2
@@ -83,6 +91,45 @@ select_from_folder() {
     done
 }
 
+# select an installed game
+select_game_id() {
+    local compatdata_dir="$HOME/.steam/steam/steamapps/compatdata"
+    local vortexgames_file="$BASE_DIR/vortexgames.txt"
+
+    # Get a list of all game IDs from subfolders in $compatdata_dir
+    local game_ids=()
+    for folder in "$compatdata_dir"/*; do
+        if [[ -d "$folder" ]]; then
+            game_ids+=("$(basename "$folder")")
+        fi
+    done
+
+    # Filter out lines from vortexgames.txt that don't have subfolders
+    local filtered_lines=()
+    while IFS=';' read -r slug name id; do
+        id="${id//\"/}"  # Remove quotes from game ID
+        name="${name//\"/}"  # Remove quotes from game name
+        if [[ "${game_ids[*]}" =~ (^|[[:space:]])$id($|[[:space:]]) ]]; then
+            filtered_lines+=("$name [$id]")
+        fi
+    done < "$vortexgames_file"
+
+
+    # Show a bash select menu with game options
+    PS3="Select a game: "
+    select option in "${filtered_lines[@]}"; do
+        if [[ -n $option ]]; then
+            # Extract the game ID from the selected option
+            local game_id="${option##*[}"
+            game_id="${game_id%]}"
+            echo "$game_id"
+            return
+        else
+            echo "Invalid selection, try again."
+        fi
+    done
+}
+
 # run vortex setup exe
 install_vortex() {
     echo "Installing Vortex..." >&2
@@ -114,6 +161,7 @@ install() {
     setup
     download_wine
     download_vortex
+    download_mapping
     setup_wineprefix
     setup_drives
     install_vortex
@@ -135,6 +183,7 @@ update() {
     setup
     download_wine
     download_vortex
+    download_mapping
 }
 
 # show help
@@ -144,7 +193,7 @@ help() {
     echo "  install             Set up dependencies and install Vortex"
     echo "  start               Start Vortex"
     echo "  uninstall           Uninstall Vortex"
-    echo "  update              Download the latest Wine and Vortex versions"
+    echo "  update              Download the latest Wine, Vortex, and game mappings"
     echo ""
     echo "Description:"
     echo "  This script allows you to install and run Vortex, a mod manager for games."
@@ -164,9 +213,9 @@ help() {
     echo "  uninstall: Uninstall Vortex"
     echo "    This command removes all Vortex-related files and directories."
     echo ""
-    echo "  update: Update to the latest Wine and Vortex versions"
-    echo "    This command downloads the latest versions of Wine-GE-Custom and"
-    echo "    Vortex setup executable."
+    echo "  update: Update to the latest Wine, Vortex, and game mappings"
+    echo "    This command downloads the latest versions of Wine-GE-Custom,"
+    echo "    Vortex setup executable, and the game mappings file."
 }
 
 if declare -f "$1" >/dev/null; then
