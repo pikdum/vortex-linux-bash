@@ -71,6 +71,7 @@ setup_drives() {
     echo "Setting up drives..."
     cd "$VORTEX_PREFIX/dosdevices"
     ln -s $HOME/.steam/steam/steamapps/common/ d: || true
+    # TODO: set up steam deck sd card
 }
 
 # select item from folder
@@ -187,12 +188,44 @@ start() {
 }
 
 # pull new wine and vortex versions
+# and game mappings
 update() {
     echo "Grabbing new releases..."
     setup
     download_wine
     download_vortex
     download_mapping
+}
+
+# symlink AppData/Local/* from game to Vortex
+# this is mainly to help get skyrim loadorder.txt and plugins.txt in the right place
+# maybe some other games too
+# TODO: could I make a more general solution that traverses users/steamuser/?
+symlink() {
+    echo "Symlinking target game's AppData/Local/* to Vortex..."
+    local game_id="$(select_game_id)"
+    local compatdata_dir="$HOME/.steam/steam/steamapps/compatdata"
+    local src_dir="$compatdata_dir/$game_id/pfx/drive_c/users/steamuser/AppData/Local"
+    local dest_dir="$VORTEX_PREFIX/drive_c/users/vortex/AppData/Local"
+
+    # Check if the source directory exists
+    if [ ! -d "$src_dir" ]; then
+        echo "Source directory not found: $src_dir" >&2
+        exit 1
+    fi
+
+    # Check if the destination directory exists
+    if [ ! -d "$dest_dir" ]; then
+        echo "Destination directory not found: $dest_dir" >&2
+        exit 1
+    fi
+
+    for dir in "$src_dir"/*; do
+        dir_name=$(basename "$dir")
+        rm -rf "${dest_dir:?}/$dir_name"
+        ln -s "$dir" "$dest_dir/$dir_name"
+        echo "Symlink created: $dest_dir/$dir_name"
+    done
 }
 
 # show help
