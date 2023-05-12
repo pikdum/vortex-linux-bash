@@ -248,11 +248,18 @@ start_vortex() {
 
 }
 
-
 # Get the stored Wine build from ~/.pikdum/vortex/WINE_BUILD or prompt for selection if it doesn't exist
 get_wine_build() {
     if [ -f "$BASE_DIR/WINE_BUILD" ]; then
-        cat "$BASE_DIR/WINE_BUILD"
+        local wine_build="$(cat "$BASE_DIR/WINE_BUILD")"
+        local wine_build_path="$BASE_DIR/$wine_build/$THAT"
+
+        if [ -f "$wine_build_path" ]; then
+            cat "$BASE_DIR/WINE_BUILD"
+        else
+            set_wine_build
+            cat "$BASE_DIR/WINE_BUILD"
+        fi
     else
         set_wine_build
         cat "$BASE_DIR/WINE_BUILD"
