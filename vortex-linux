@@ -75,7 +75,7 @@ download_vortex() {
     if [[ -n $vortex_url ]]; then
         local filename="$(basename -- "$vortex_url")"
         echo "Downloading $filename into $VORTEX_INSTALLERS..."
-        rm -f "$filename"
+        rm -f ./*
         curl -# -OJL "$vortex_url"
     else
         echo "No valid URL selected for Vortex." >&2
