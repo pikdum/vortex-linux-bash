@@ -256,7 +256,6 @@ set_wine_build() {
 
 # set up dependencies + install vortex
 install() {
-    setup
     download_wine
     download_vortex
     download_mapping
@@ -281,7 +280,6 @@ start() {
 # and game mappings
 update() {
     echo "Grabbing new releases..."
-    setup
     download_wine
     download_vortex
     download_mapping
