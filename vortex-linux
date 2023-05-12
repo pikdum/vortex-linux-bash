@@ -272,7 +272,6 @@ get_wine_build() {
 set_wine_build() {
     local selected_build="$(select_from_folder "$WINE_BUILDS" "Choose a Wine build to use: ")"
     echo "$selected_build" > "$BASE_DIR/WINE_BUILD"
-    cat "$BASE_DIR/WINE_BUILD"
 }
 
 # set up dependencies + install vortex
