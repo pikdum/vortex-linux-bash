@@ -52,7 +52,8 @@ download_wine() {
     cd "$WINE_BUILDS"
     local url=$(get_recent_releases "GloriousEggroll/wine-ge-custom" ".tar.xz")
     if [[ -n $url ]]; then
-        echo "Downloading $url into $WINE_BUILDS..."
+        local filename="$(basename -- "$url")"
+        echo "Downloading $filename into $WINE_BUILDS..."
         curl -# -L "$url" | tar -xJ
     else
         echo "No valid URL selected for wine-ge-custom." >&2
@@ -64,7 +65,8 @@ download_vortex() {
     cd "$VORTEX_INSTALLERS"
     local url=$(get_recent_releases "Nexus-Mods/Vortex" ".exe")
     if [[ -n $url ]]; then
-        echo "Downloading $url into $VORTEX_INSTALLERS..."
+        local filename="$(basename -- "$url")"
+        echo "Downloading $filename into $VORTEX_INSTALLERS..."
         rm -f "$filename"
         curl -# -OJL "$url"
     else
@@ -84,7 +86,7 @@ download_mapping() {
 setup_wineprefix() {
     echo "Setting up WINEPREFIX: $VORTEX_PREFIX..." >&2
 
-    WINE_BUILD="$WINE_BUILDS/$(select_from_folder "$WINE_BUILDS" "Choose a Wine build: ")"
+    WINE_BUILD="$WINE_BUILDS/$(get_wine_build)"
     trap '$WINE_BUILD/bin/wineserver --kill' EXIT
 
     WINEDLLOVERRIDES="mscoree,mshtml=" WINEPREFIX="$VORTEX_PREFIX" "$WINE_BUILD/bin/wineboot" --init
@@ -200,7 +202,7 @@ EOF
 install_vortex() {
     echo "Installing Vortex..." >&2
 
-    WINE_BUILD="$WINE_BUILDS/$(select_from_folder "$WINE_BUILDS" "Choose a Wine build: ")"
+    WINE_BUILD="$WINE_BUILDS/$(get_wine_build)"
     trap '$WINE_BUILD/bin/wineserver --kill' EXIT
 
     local vortex_exe="$VORTEX_INSTALLERS/$(select_from_folder "$VORTEX_INSTALLERS" "Choose a Vortex version: ")"
@@ -214,7 +216,7 @@ install_vortex() {
 start_vortex() {
     echo "Starting Vortex..." >&2
 
-    WINE_BUILD="$WINE_BUILDS/$(select_from_folder "$WINE_BUILDS" "Choose a Wine build: ")"
+    WINE_BUILD="$WINE_BUILDS/$(get_wine_build)"
 
     if [ "$1" = "-d" ] || [ "$1" = "-i" ]; then
         if [ -n "$2" ]; then
@@ -232,7 +234,25 @@ start_vortex() {
 
 }
 
+
+# Get the stored Wine build from ~/.pikdum/vortex/WINE_BUILD or prompt for selection if it doesn't exist
+get_wine_build() {
+    if [ -f "$BASE_DIR/WINE_BUILD" ]; then
+        cat "$BASE_DIR/WINE_BUILD"
+    else
+        set_wine_build
+        cat "$BASE_DIR/WINE_BUILD"
+    fi
+}
+
 # begin of more important commands
+
+# Set the selected Wine build and store it in ~/.pikdum/vortex/WINE_BUILD
+set_wine_build() {
+    local selected_build="$(select_from_folder "$WINE_BUILDS" "Choose a Wine build: ")"
+    echo "$selected_build" > "$BASE_DIR/WINE_BUILD"
+    cat "$BASE_DIR/WINE_BUILD"
+}
 
 # set up dependencies + install vortex
 install() {
