@@ -19,7 +19,7 @@ setup
 
 # get asset urls and filenames from recent releases
 # params: $1 - github repo, $2 - file extension
-get_recent_releases() {
+select_release() {
     local repo="$1"
     local ext="$2"
     echo "Getting recent $repo releases..." >&2
@@ -50,7 +50,7 @@ get_recent_releases() {
 # download recent wine-ge-custom releases
 download_wine() {
     cd "$WINE_BUILDS"
-    local url=$(get_recent_releases "GloriousEggroll/wine-ge-custom" ".tar.xz")
+    local url=$(select_release "GloriousEggroll/wine-ge-custom" ".tar.xz")
     if [[ -n $url ]]; then
         local filename="$(basename -- "$url")"
         echo "Downloading $filename into $WINE_BUILDS..."
@@ -63,7 +63,7 @@ download_wine() {
 # download recent vortex setup exe releases
 download_vortex() {
     cd "$VORTEX_INSTALLERS"
-    local url=$(get_recent_releases "Nexus-Mods/Vortex" ".exe")
+    local url=$(select_release "Nexus-Mods/Vortex" ".exe")
     if [[ -n $url ]]; then
         local filename="$(basename -- "$url")"
         echo "Downloading $filename into $VORTEX_INSTALLERS..."
