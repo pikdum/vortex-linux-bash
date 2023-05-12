@@ -32,7 +32,7 @@ get_recent_releases() {
 
     # Extract the download URLs and filenames for the last 10 releases with the desired extension
     local urls=($(echo "$releases_json" | grep -o "https://.*${ext}" | head -n 10))
-    local files=($(echo "$releases_json" | jq -r ".[].assets[] | select(.name | endswith(\"$ext\")).name" | head -n 10))
+    local files=($(echo "$releases_json" | sed -n "s/.*\"name\": \"\([^ ]*${ext}\)\".*/\1/p" | head -n 10))
 
     # Display a selection menu for the filenames
     PS3="Select a release to download: "
