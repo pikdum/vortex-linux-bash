@@ -288,7 +288,7 @@ install() {
 uninstall() {
     rm -rf "$BASE_DIR"
     rm -rf "$HOME/.local/share/applications/vortex-linux.desktop"
-    echo "Vortex uninstalled." &>2
+    echo "Vortex uninstalled." >&2
 }
 
 # start vortex
