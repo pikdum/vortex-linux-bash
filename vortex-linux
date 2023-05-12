@@ -113,8 +113,14 @@ setup_wineprefix() {
 setup_drives() {
     echo "Setting up drives..."
     cd "$VORTEX_PREFIX/dosdevices"
-    ln -s $HOME/.steam/steam/steamapps/common/ d: || true
-    # TODO: set up steam deck sd card
+
+    if [ -d "$HOME/.steam/steam/steamapps/common/" ]; then
+        ln -s "$HOME/.steam/steam/steamapps/common/" j: || true
+    fi
+
+    if [ -d "/run/media/mmcblk0p1/steamapps/common/" ]; then
+        ln -s "/run/media/mmcblk0p1/steamapps/common/" k: || true
+    fi
 }
 
 # select item from folder
