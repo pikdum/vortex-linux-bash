@@ -47,28 +47,36 @@ select_release() {
     done
 }
 
-# download recent wine-ge-custom releases
+# download wine
 download_wine() {
     cd "$WINE_BUILDS"
-    local url=$(select_release "GloriousEggroll/wine-ge-custom" ".tar.xz")
-    if [[ -n $url ]]; then
-        local filename="$(basename -- "$url")"
+    local wine_url="$WINE_URL"
+    if [[ -z $wine_url ]]; then
+        wine_url=$(select_release "GloriousEggroll/wine-ge-custom" ".tar.xz")
+    fi
+
+    if [[ -n $wine_url ]]; then
+        local filename="$(basename -- "$wine_url")"
         echo "Downloading $filename into $WINE_BUILDS..."
-        curl -# -L "$url" | tar -xJ
+        curl -# -L "$wine_url" | tar -xJ
     else
         echo "No valid URL selected for wine-ge-custom." >&2
     fi
 }
 
-# download recent vortex setup exe releases
+# download vortex
 download_vortex() {
     cd "$VORTEX_INSTALLERS"
-    local url=$(select_release "Nexus-Mods/Vortex" ".exe")
-    if [[ -n $url ]]; then
-        local filename="$(basename -- "$url")"
+    local vortex_url="$VORTEX_URL"
+    if [[ -z $vortex_url ]]; then
+        vortex_url=$(select_release "Nexus-Mods/Vortex" ".exe")
+    fi
+
+    if [[ -n $vortex_url ]]; then
+        local filename="$(basename -- "$vortex_url")"
         echo "Downloading $filename into $VORTEX_INSTALLERS..."
         rm -f "$filename"
-        curl -# -OJL "$url"
+        curl -# -OJL "$vortex_url"
     else
         echo "No valid URL selected for Vortex." >&2
     fi
